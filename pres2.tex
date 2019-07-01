@@ -15,7 +15,7 @@
 %	PACKAGES AND THEMES
 %----------------------------------------------------------------------------------------
 
-\documentclass{beamer}
+\documentclass[xcolor=table]{beamer}
 
 \mode<presentation> {
 
@@ -83,6 +83,18 @@
 \usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in 
 %tables
 \usepackage[french]{babel}
+\usepackage{csquotes}
+
+\usepackage[font=tiny]{subfig}
+
+\usepackage{pgfplots}
+\usepgfplotslibrary{fillbetween}
+\pgfplotsset{every tick label/.append style={font=\tiny}}
+
+\newcommand\galap[0]{\textsc{G-alap}}
+\newcommand\galapllf[0]{\textsc{G-alap-LLF}}
+\newcommand\galapedf[0]{\textsc{G-alap-EDF}}
+\newcommand\galapezl[0]{\textsc{G-alap-EDZL}}
 
 \setbeamertemplate{navigation symbols}{}
 
@@ -169,6 +181,8 @@ Docteur en informatique de Télécom ParisTech\\
 %-------------------------------------------------------------------------------
 \section{Ordonnancement à criticité mixte pour tâches dépendantes}
 %-------------------------------------------------------------------------------
+\subsection{Modèle d'exécution}
+%-------------------------------------------------------------------------------
 
 \begin{frame}
 	\frametitle{Pire temps d'exécution (WCET)}
@@ -192,34 +206,28 @@ Docteur en informatique de Télécom ParisTech\\
 	\end{itemize}
 \end{frame}
 
+%-------------------------------------------------------------------------------
+
 \begin{frame}
 	\frametitle{Le modèle à criticité-mixte}
 	\begin{enumerate}
 		
-		\item Incorporate tasks with different criticality levels: HI and LO.
-		\item Execution modes:
+		\item Incorporer des tâches avec différents niveaux de criticité : HI et LO.
+		\item Modes d'exécution :
 		\begin{itemize}
-			\item LO-criticality mode: HI tasks + LO tasks.
-			\item HI-criticality mode: HI tasks $\rightarrow$ 
-			LO tasks degraded.
+			\item Mode LO-criticality : Tâches HI  + tâches LO .
+			\item Mode HI-criticality : Tâches HI  $\rightarrow$ Tâches LO dégradées.
 		\end{itemize}
-		\item Different timing budgets.
+		\item Plusieurs pire temps d'exécution.
 		\begin{itemize}
-			\item $C_i(LO)$: Max. observed execution time (system designers).
-			\item $C_i(HI)$: Upper-bounded execution time (static analysis).
+			\item $C_i(LO)$: Max. temps d'exécution observé (system designers).
+			\item $C_i(HI)$: Borne sup. temps d'exécution (static analysis).
 		\end{itemize}
-		\item System switches to HI-criticality mode when needed.
-	\end{enumerate}
-	
-%	\begin{figure}
-%		\centering
-%		\includegraphics[width=9cm]{figs/mxsched.png}
-%	\end{figure}
-%	\begin{figure}
-%		\centering
-%		\includegraphics[width=9cm]{figs/mxschedhi.png}
-%	\end{figure}
+		\item Système passe dans le mode HI-criticality quand c'est nécessaire.
+	\end{enumerate}	
 \end{frame}
+
+%-------------------------------------------------------------------------------
 
 \begin{frame}
 	\frametitle{Limites des approches existantes}
@@ -229,21 +237,19 @@ Docteur en informatique de Télécom ParisTech\\
 	\frametitle{Mixed-Criticality Directed Acyclic Graphs}
 	\begin{columns}
 		\begin{column}{0.4\textwidth}
-			MC-DAG $G_j \in \mathcal{G}$.\\
-			$G_j=(V_j, E_j, D_j, T_j)$.
+			MC-DAG $G \in \mathcal{G}$.\\
+			$G=(V, E, D, T)$.
 			\begin{itemize}
-				\item<2-> $V_j$ set of vertices.
-				\item<3-> $E_j \subseteq (V_j \times V_j)$ set of edges.
-				\item<4-> $D_j$ deadline.
-				\item<5-> $T_j$ period.
+				\item<2-> $V$ ensemble de n\oe{}uds.
+				\item<3-> $E \subseteq (V \times V)$ ensemble d'arcs.
+				\item<4-> $D$ échéance.
+				\item<5-> $T$ période.
 			\end{itemize}
-			\only<6->{Vertex $\tau_i = (\chi_i, 
+			\only<6->{N\oe{}uds $\tau_i = (\chi_i, 
 			C_i(\chi_1), \dots, C_i(\chi_\ell))$}
 			\begin{itemize}
-				\item<6-> $\chi_i \in \mathcal{CL}$. criticality level of the 
-				task.
-				\item<7-> $C_i(\chi_1), \dots, C_i(\chi_\ell)$ timing 
-				budgets.
+				\item<6-> $\chi_i \in \mathcal{CL}$ niveau de criticité.
+				\item<7-> $C_i(\chi_1), \dots, C_i(\chi_\ell)$ pire temps d'exécution.
 			\end{itemize}
 		\end{column}
 		\begin{column}{0.6\textwidth}
@@ -260,15 +266,519 @@ Docteur en informatique de Télécom ParisTech\\
 	\end{columns}
 \end{frame}
 
+%------------------------------------------------------------------------------
+\subsection{Outil de génération}
+%------------------------------------------------------------------------------
+
+\begin{frame}
+	\frametitle{Unbiased generation tool}		
+	\begin{itemize}
+		\item Integrate concepts of different communities.
+		\begin{itemize}
+			\item Avoid particular DAG shapes: create vertices using 
+			layers.
+			\item Distribute system utilization 
+			uniformly.
+		\end{itemize}
+		\item Many parameters need to be taken into account.
+		\begin{itemize}
+			\item Utilization of the system.
+			\item Number of MC-DAGs.
+			\item Number of vertices.
+			\item Probability to have an edge.
+			\item Ratio HI/LO-criticality tasks.
+		\end{itemize}
+		\item Integration into an open-source framework~\footnote{MC-DAG 
+			framework - \url{https://github.com/robertoxmed/MC-DAG}}.
+	\end{itemize}
+\end{frame}
+
+%------------------------------------------------------------------------------
+
+\begin{frame}
+	\frametitle{Unbiased generation algorithm}
+	
+	\begin{columns}
+		\begin{column}{.6\textwidth}
+			\begin{exampleblock}{MC-DAG generator}
+				\begin{enumerate}
+					\item<1-> Distribute utilization.
+					\item<1-> Draw a random deadline.
+					\item<2-> For each criticality level:
+					\begin{itemize}
+						\item<3-> \textbf{\textit{Vertex generation phase}} by 
+						layers.
+						\item<4-> \textbf{\textit{Incorporation of edges}}
+						following a given probability.
+						\item<5-> \textbf{\textit{Reduction phase}} reach a 
+						reduction factor.
+					\end{itemize}
+				\end{enumerate}
+			\end{exampleblock}
+		\end{column}
+		
+		\begin{column}{0.4\textwidth}
+			\begin{figure}
+				\includegraphics<3|handout:0>[width=4.5cm]{figs/random_dag0.pdf}
+				\includegraphics<4|handout:0>[width=4.5cm]{figs/random_dag1.pdf}
+				\includegraphics<5|handout:0>[width=4.5cm]{figs/random_dag2.pdf}
+				\includegraphics<6->[width=4.5cm]{figs/random_dag.pdf}
+			\end{figure}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+%------------------------------------------------------------------------------
+
+\begin{frame}
+	\frametitle{Experimental results}
+	
+	\begin{figure}
+		\subfloat[\textsc{G-LLF, $|\mathcal{G}| = 1$}]{
+			\begin{tikzpicture}[every mark/.append style={mark size=1pt}]
+			\begin{axis}[height=4cm, width=0.35\textwidth,
+			legend style={nodes={scale=0.4, transform shape}},
+			legend pos=north east,grid,
+			log ticks with fixed point,
+			ytick={0, 0.1, ..., 1.1},
+			xtick={0.2, 0.3, ..., 1.1},
+			xmin=0.25,	xmax=1,cycle list name=exotic,
+			ymin=0]
+			
+			\path[name path=axis] (axis cs:0.25,0) -- (axis cs:1,0);
+			
+			\addplot+[name path=llf2] table [x=Unorm, y=LLF] 
+			{data/sched/sched_l2_d1.csv};
+			\addplot+[name path=llf4] table [x=Unorm, y=LLF] 
+			{data/sched/sched_l4_d1.csv};
+			\addplot+[name path=llf5] table [x=Unorm, y=LLF] 
+			{data/sched/sched_l5_d1.csv};
+			
+			\addplot[name path=fedllf2] 	table 	[x=Unorm, y=FEDLLF] 
+			{data/sched/sched_l2_d1.csv};
+			\addplot+[name path=fedllf4] table [x=Unorm, y=FEDLLF] 
+			{data/sched/sched_l4_d1.csv};
+			\addplot+[name path=fedllf5] table 	[x=Unorm, y=FEDLLF] 
+			{data/sched/sched_l5_d1.csv};
+			
+			\pgfplotsset{cycle list shift=-6}
+			\addplot +[fill opacity=0.5] fill between [of=llf2 and axis];
+			\addplot +[fill opacity=0.5] fill between [of=llf4 and axis];
+			\addplot +[fill opacity=0.5] fill between [of=llf5 and axis];
+			\addplot +[gray,fill opacity=0.5] fill between [of=fedllf2 and axis];
+			\addplot +[fill opacity=0.5] fill between [of=fedllf4 and axis];
+			\addplot +[fill opacity=0.5] fill between [of=fedllf5 and axis];
+			
+			\end{axis}
+			\end{tikzpicture}
+			\label{subfig:acceptance-llf}
+		}
+		\subfloat[\textsc{G-EDF, $|\mathcal{G}| = 1$}]{
+			\begin{tikzpicture}[every mark/.append style={mark size=1.2pt}]
+			\begin{axis}[	height=4cm, width=0.35\textwidth,
+			legend style={nodes={scale=0.5, transform shape}},
+			legend pos=north east,grid,
+			log ticks with fixed point,
+			ytick={0, 0.1, ..., 1.1},
+			xtick={0.2, 0.3, ..., 1.1},
+			xmin=0.25,	xmax=1,cycle list name=exotic,
+			ymin=0]
+			
+			\path[name path=axis] (axis cs:0.25,0) -- (axis cs:1,0);
+			
+			\addplot+[name path=edf2] table [x=Unorm, y=EDF] 
+			{data/sched/sched_l2_d1.csv};
+			\addplot+[name path=edf4] table [x=Unorm, y=EDF] 
+			{data/sched/sched_l4_d1.csv};
+			\addplot+[name path=edf5] table [x=Unorm, y=EDF] 
+			{data/sched/sched_l5_d1.csv};
+			
+			\addplot[name path=fededf2] 	table 	[x=Unorm, y=FEDEDF] 
+			{data/sched/sched_l2_d1.csv};
+			\addplot+[name path=fededf4] table [x=Unorm, y=FEDEDF] 
+			{data/sched/sched_l4_d1.csv};
+			\addplot+[name path=fededf5] table 	[x=Unorm, y=FEDEDF] 
+			{data/sched/sched_l5_d1.csv};
+			
+			\pgfplotsset{cycle list shift=-6}
+			\addplot +[fill opacity=0.5] fill between [of=edf2 and axis];
+			\addplot +[fill opacity=0.5] fill between [of=edf4 and axis];
+			\addplot +[fill opacity=0.5] fill between [of=edf5 and axis];
+			\addplot +[gray,fill opacity=0.5] fill between [of=fededf2 and axis];
+			\addplot +[fill opacity=0.5] fill between [of=fededf4 and axis];
+			\addplot +[fill opacity=0.5] fill between [of=fededf5 and axis];
+			
+%			\addlegendentry{\galap, $|\mathcal{CL}| = 2$}
+%			\addlegendentry{\galap, $|\mathcal{CL}| = 4$}
+%			\addlegendentry{\galap, $|\mathcal{CL}| = 5$}
+%			\addlegendentry{\textsc{Fed}, $|\mathcal{CL}| = 2$}
+%			\addlegendentry{\textsc{Fed}, $|\mathcal{CL}| = 4$}
+%			\addlegendentry{\textsc{Fed}, $|\mathcal{CL}| = 5$}
+			
+			\end{axis}
+			\end{tikzpicture}
+			\label{subfig:acceptance-edf-d1}
+		}
+		\subfloat[\textsc{G-EDZL, $|\mathcal{G}| = 1$}]{
+			\begin{tikzpicture}[every mark/.append style={mark size=1.2pt}]
+			\begin{axis}[	height=4cm, width=0.35\textwidth,
+			legend style={nodes={scale=0.4, transform shape}},
+			legend pos=north east,grid,
+			log ticks with fixed point,
+			ytick={0, 0.1, ..., 1.1},
+			xtick={0.2, 0.3, ..., 1.1},
+			xmin=0.25,	xmax=1,cycle list name=exotic,
+			ymin=0]
+			\path[name path=axis] (axis cs:0.25,0) -- (axis cs:1,0);
+			
+			\addplot+[name path=ezl2] table [x=Unorm, y=EZL] 
+			{data/sched/sched_l2_d1.csv};
+			\addplot+[name path=ezl4] table [x=Unorm, y=EZL] 
+			{data/sched/sched_l4_d1.csv};
+			\addplot+[name path=ezl5] table [x=Unorm, y=EZL] 
+			{data/sched/sched_l5_d1.csv};
+			
+			\addplot[name path=fedezl2] 	table 	[x=Unorm, y=FEDEZL] 
+			{data/sched/sched_l2_d1.csv};
+			\addplot+[name path=fedezl4] table [x=Unorm, y=FEDEZL] 
+			{data/sched/sched_l4_d1.csv};
+			\addplot+[name path=fedzl5] table 	[x=Unorm, y=FEDEZL] 
+			{data/sched/sched_l5_d1.csv};
+			
+			\pgfplotsset{cycle list shift=-6}
+			\addplot +[fill opacity=0.5] fill between [of=ezl2 and axis];
+			\addplot +[fill opacity=0.5] fill between [of=ezl4 and axis];
+			\addplot +[fill opacity=0.5] fill between [of=ezl5 and axis];
+			\addplot +[gray,fill opacity=0.5] fill between [of=fedezl2 and axis];
+			\addplot +[fill opacity=0.5] fill between [of=fedezl4 and axis];
+			\addplot +[fill opacity=0.5] fill between [of=fedzl5 and axis];
+			
+			\end{axis}
+			\end{tikzpicture}
+			\label{subfig:acceptance-ezl-d1}
+		}
+	
+			\subfloat[\textsc{G-LLF, $|\mathcal{G}| = 2$}]{
+				\begin{tikzpicture}[every mark/.append style={mark size=1.2pt}]
+				\begin{axis}[	height=4cm, width=0.35\textwidth,
+				legend style={nodes={scale=0.4, transform shape}},
+				legend pos=north east,grid,
+				log ticks with fixed point,
+				ytick={0, 0.1, ..., 1.1},
+				xtick={0.2, 0.3, ..., 1.1},
+				xmin=0.25,	xmax=1,cycle list name=exotic,
+				ymin=0]
+				\path[name path=axis] (axis cs:0.25,0) -- (axis cs:1,0);
+				
+				\addplot+[name path=llf2] table [x=Unorm, y=LLF] 
+				{data/sched/sched_l2_d2.csv};
+				\addplot+[name path=llf4] table [x=Unorm, y=LLF] 
+				{data/sched/sched_l4_d2.csv};
+				\addplot+[name path=llf5] table [x=Unorm, y=LLF] 
+				{data/sched/sched_l5_d2.csv};
+				
+				\addplot[name path=fedllf2] 	table 	[x=Unorm, y=FEDLLF] 
+				{data/sched/sched_l2_d2.csv};
+				\addplot+[name path=fedllf4] table [x=Unorm, y=FEDLLF] 
+				{data/sched/sched_l4_d2.csv};
+				\addplot+[name path=fedllf5] table 	[x=Unorm, y=FEDLLF] 
+				{data/sched/sched_l5_d2.csv};
+				
+				\pgfplotsset{cycle list shift=-6}
+				\addplot +[fill opacity=0.5] fill between [of=llf2 and axis];
+				\addplot +[fill opacity=0.5] fill between [of=llf4 and axis];
+				\addplot +[fill opacity=0.5] fill between [of=llf5 and axis];
+				\addplot +[gray,fill opacity=0.5] fill between [of=fedllf2 and axis];
+				\addplot +[fill opacity=0.5] fill between [of=fedllf4 and axis];
+				\addplot +[fill opacity=0.5] fill between [of=fedllf5 and axis];
+				\end{axis}
+				\end{tikzpicture}
+				\label{subfig:acceptance-llf-d2}
+			}
+			\subfloat[\textsc{G-EDF, $|\mathcal{G}| = 2$}]{
+				\begin{tikzpicture}[every mark/.append style={mark size=1.2pt}]
+				\begin{axis}[	height=4cm, width=0.35\textwidth,
+				legend style={nodes={scale=0.4, transform shape}},
+				legend pos=north east,grid,
+				log ticks with fixed point,
+				ytick={0, 0.1, ..., 1.1},
+				xtick={0.2, 0.3, ..., 1.1},
+				xmin=0.25,	xmax=1,cycle list name=exotic,
+				ymin=0]
+				\path[name path=axis] (axis cs:0.25,0) -- (axis cs:1,0);
+				
+				\addplot+[name path=edf2] table [x=Unorm, y=EDF] 
+				{data/sched/sched_l2_d2.csv};
+				\addplot+[name path=edf4] table [x=Unorm, y=EDF] 
+				{data/sched/sched_l4_d2.csv};
+				\addplot+[name path=edf5] table [x=Unorm, y=EDF] 
+				{data/sched/sched_l5_d2.csv};
+				
+				\addplot[name path=fededf2] 	table 	[x=Unorm, y=FEDEDF] 
+				{data/sched/sched_l2_d2.csv};
+				\addplot+[name path=fededf4] table [x=Unorm, y=FEDEDF] 
+				{data/sched/sched_l4_d2.csv};
+				\addplot+[name path=fededf5] table 	[x=Unorm, y=FEDEDF] 
+				{data/sched/sched_l5_d2.csv};
+				
+				\pgfplotsset{cycle list shift=-6}
+				\addplot +[fill opacity=0.5] fill between [of=edf2 and axis];
+				\addplot +[fill opacity=0.5] fill between [of=edf4 and axis];
+				\addplot +[fill opacity=0.5] fill between [of=edf5 and axis];
+				\addplot +[gray,fill opacity=0.5] fill between [of=fededf2 and axis];
+				\addplot +[fill opacity=0.5] fill between [of=fededf4 and axis];
+				\addplot +[fill opacity=0.5] fill between [of=fededf5 and axis];
+				\end{axis}
+				\end{tikzpicture}
+				\label{subfig:acceptance-edf}
+			}
+			\subfloat[\textsc{G-EDZL, $|\mathcal{G}| = 2$}]{
+				\begin{tikzpicture}[every mark/.append style={mark size=1.2pt}]
+				\begin{axis}[	height=4cm, width=0.35\textwidth,
+				legend style={nodes={scale=0.4, transform shape}},
+				legend pos=north east,grid,
+				log ticks with fixed point,
+				ytick={0, 0.1, ..., 1.1},
+				xtick={0.2, 0.3, ..., 1.1},
+				xmin=0.25,	xmax=1,cycle list name=exotic,
+				ymin=0]
+				
+				\path[name path=axis] (axis cs:0.25,0) -- (axis cs:1,0);
+				
+				\addplot+[name path=ezl2] table [x=Unorm, y=EZL] 
+				{data/sched/sched_l2_d2.csv};
+				\addplot+[name path=ezl4] table [x=Unorm, y=EZL] 
+				{data/sched/sched_l4_d2.csv};
+				\addplot+[name path=ezl5] table [x=Unorm, y=EZL] 
+				{data/sched/sched_l5_d2.csv};
+				
+				\addplot[name path=fedezl2] 	table 	[x=Unorm, y=FEDEZL] 
+				{data/sched/sched_l2_d2.csv};
+				\addplot+[name path=fedezl4] table [x=Unorm, y=FEDEZL] 
+				{data/sched/sched_l4_d2.csv};
+				\addplot+[name path=fedzl5] table 	[x=Unorm, y=FEDEZL] 
+				{data/sched/sched_l5_d2.csv};
+				
+				\pgfplotsset{cycle list shift=-6}
+				\addplot +[fill opacity=0.5] fill between [of=ezl2 and axis];
+				\addplot +[fill opacity=0.5] fill between [of=ezl4 and axis];
+				\addplot +[fill opacity=0.5] fill between [of=ezl5 and axis];
+				\addplot +[gray,fill opacity=0.5] fill between [of=fedezl2 and axis];
+				\addplot +[fill opacity=0.5] fill between [of=fedezl4 and axis];
+				\addplot +[fill opacity=0.5] fill between [of=fedzl5 and axis];
+				
+				\end{axis}
+				\end{tikzpicture}
+				\label{subfig:acceptance-ezl-d2}
+			}
+	\end{figure}
+\end{frame}
+
+%\begin{frame}
+%	\frametitle{Expe}
+%	
+%	\begin{figure}
+%		
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%		
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%		
+%		\subfloat[\textsc{G-LLF, $|\mathcal{G}| = 2$}]{
+%			\begin{tikzpicture}[every mark/.append style={mark size=1.2pt}]
+%			\begin{axis}[	height=6cm, width=0.35\textwidth,
+%			legend style={nodes={scale=0.4, transform shape}},
+%			legend pos=north east,grid,
+%			log ticks with fixed point,
+%			ytick={0, 0.1, ..., 1.1},
+%			xtick={0.2, 0.3, ..., 1.1},
+%			xmin=0.25,	xmax=1,cycle list name=exotic,
+%			ymin=0]
+%			\path[name path=axis] (axis cs:0.25,0) -- (axis cs:1,0);
+%			
+%			\addplot+[name path=llf2] table [x=Unorm, y=LLF] 
+%			{data/sched/sched_l2_d2.csv};
+%			\addplot+[name path=llf4] table [x=Unorm, y=LLF] 
+%			{data/sched/sched_l4_d2.csv};
+%			\addplot+[name path=llf5] table [x=Unorm, y=LLF] 
+%			{data/sched/sched_l5_d2.csv};
+%			
+%			\addplot[name path=fedllf2] 	table 	[x=Unorm, y=FEDLLF] 
+%			{data/sched/sched_l2_d2.csv};
+%			\addplot+[name path=fedllf4] table [x=Unorm, y=FEDLLF] 
+%			{data/sched/sched_l4_d2.csv};
+%			\addplot+[name path=fedllf5] table 	[x=Unorm, y=FEDLLF] 
+%			{data/sched/sched_l5_d2.csv};
+%			
+%			\pgfplotsset{cycle list shift=-6}
+%			\addplot +[fill opacity=0.5] fill between [of=llf2 and axis];
+%			\addplot +[fill opacity=0.5] fill between [of=llf4 and axis];
+%			\addplot +[fill opacity=0.5] fill between [of=llf5 and axis];
+%			\addplot +[gray,fill opacity=0.5] fill between [of=fedllf2 and axis];
+%			\addplot +[fill opacity=0.5] fill between [of=fedllf4 and axis];
+%			\addplot +[fill opacity=0.5] fill between [of=fedllf5 and axis];
+%			\end{axis}
+%			\end{tikzpicture}
+%			\label{subfig:acceptance-llf-d2}
+%		}
+%		\subfloat[\textsc{G-EDF, $|\mathcal{G}| = 2$}]{
+%			\begin{tikzpicture}[every mark/.append style={mark size=1.2pt}]
+%			\begin{axis}[	height=6cm, width=0.35\textwidth,
+%			legend style={nodes={scale=0.4, transform shape}},
+%			legend pos=north east,grid,
+%			log ticks with fixed point,
+%			ytick={0, 0.1, ..., 1.1},
+%			xtick={0.2, 0.3, ..., 1.1},
+%			xmin=0.25,	xmax=1,cycle list name=exotic,
+%			ymin=0]
+%			\path[name path=axis] (axis cs:0.25,0) -- (axis cs:1,0);
+%			
+%			\addplot+[name path=edf2] table [x=Unorm, y=EDF] 
+%			{data/sched/sched_l2_d2.csv};
+%			\addplot+[name path=edf4] table [x=Unorm, y=EDF] 
+%			{data/sched/sched_l4_d2.csv};
+%			\addplot+[name path=edf5] table [x=Unorm, y=EDF] 
+%			{data/sched/sched_l5_d2.csv};
+%			
+%			\addplot[name path=fededf2] 	table 	[x=Unorm, y=FEDEDF] 
+%			{data/sched/sched_l2_d2.csv};
+%			\addplot+[name path=fededf4] table [x=Unorm, y=FEDEDF] 
+%			{data/sched/sched_l4_d2.csv};
+%			\addplot+[name path=fededf5] table 	[x=Unorm, y=FEDEDF] 
+%			{data/sched/sched_l5_d2.csv};
+%			
+%			\pgfplotsset{cycle list shift=-6}
+%			\addplot +[fill opacity=0.5] fill between [of=edf2 and axis];
+%			\addplot +[fill opacity=0.5] fill between [of=edf4 and axis];
+%			\addplot +[fill opacity=0.5] fill between [of=edf5 and axis];
+%			\addplot +[gray,fill opacity=0.5] fill between [of=fededf2 and axis];
+%			\addplot +[fill opacity=0.5] fill between [of=fededf4 and axis];
+%			\addplot +[fill opacity=0.5] fill between [of=fededf5 and axis];
+%			\end{axis}
+%			\end{tikzpicture}
+%			\label{subfig:acceptance-edf}
+%		}
+%		\subfloat[\textsc{G-EDZL, $|\mathcal{G}| = 2$}]{
+%			\begin{tikzpicture}[every mark/.append style={mark size=1.2pt}]
+%			\begin{axis}[	height=6cm, width=0.35\textwidth,
+%			legend style={nodes={scale=0.4, transform shape}},
+%			legend pos=north east,grid,
+%			log ticks with fixed point,
+%			ytick={0, 0.1, ..., 1.1},
+%			xtick={0.2, 0.3, ..., 1.1},
+%			xmin=0.25,	xmax=1,cycle list name=exotic,
+%			ymin=0]
+%			
+%			\path[name path=axis] (axis cs:0.25,0) -- (axis cs:1,0);
+%			
+%			\addplot+[name path=ezl2] table [x=Unorm, y=EZL] 
+%			{data/sched/sched_l2_d2.csv};
+%			\addplot+[name path=ezl4] table [x=Unorm, y=EZL] 
+%			{data/sched/sched_l4_d2.csv};
+%			\addplot+[name path=ezl5] table [x=Unorm, y=EZL] 
+%			{data/sched/sched_l5_d2.csv};
+%			
+%			\addplot[name path=fedezl2] 	table 	[x=Unorm, y=FEDEZL] 
+%			{data/sched/sched_l2_d2.csv};
+%			\addplot+[name path=fedezl4] table [x=Unorm, y=FEDEZL] 
+%			{data/sched/sched_l4_d2.csv};
+%			\addplot+[name path=fedzl5] table 	[x=Unorm, y=FEDEZL] 
+%			{data/sched/sched_l5_d2.csv};
+%			
+%			\pgfplotsset{cycle list shift=-6}
+%			\addplot +[fill opacity=0.5] fill between [of=ezl2 and axis];
+%			\addplot +[fill opacity=0.5] fill between [of=ezl4 and axis];
+%			\addplot +[fill opacity=0.5] fill between [of=ezl5 and axis];
+%			\addplot +[gray,fill opacity=0.5] fill between [of=fedezl2 and axis];
+%			\addplot +[fill opacity=0.5] fill between [of=fedezl4 and axis];
+%			\addplot +[fill opacity=0.5] fill between [of=fedzl5 and axis];
+%			
+%			\end{axis}
+%			\end{tikzpicture}
+%			\label{subfig:acceptance-ezl-d2}
+%		}
+%	\end{figure}
+%\end{frame}
 
 %-------------------------------------------------------------------------------
 \begin{frame}
-	\frametitle{Integration DTIS/SEAS}
+	\frametitle{Publications \& Valorisation}
+	\begin{table}[]
+		\begin{tabular}{|l|c|l|}
+			\hline
+			\rowcolor[HTML]{DAE8FC} 
+			Total                      & 7          &                          \\ \hline
+			Journaux                   & \textit{1} & IEEE Trans. on Computers \\ \hline
+			Conférences (Papiers)      & 3          & RTSS, DATE, Ada Europe   \\ \hline
+			Conférences (WIP + Poster) & \textit{2} & RTSS, SIES               \\ \hline
+			Thèse                      & 1          &                          \\ \hline
+		\end{tabular}
+	\end{table}
+	\textbf{Séminaires externes et diffusion de l'information scientifique}
+	\begin{itemize}
+        \item INRIA, Rennes, 2017, Scheduling of DAGs for mixed-criticality systems.
+		\item INRIA, Paris, 2018, Scheduling and availability analysis for DAGs on 
+		mixed-criticality systems.
+		\item CEA List, Palaiseau, 2018, Scheduling of multi-periodic DAGs on 
+		multi-core for mixed-criticality.
+		\item T\'{e}l\'{e}com ParisTech, 2018, ``Journ\'{e}es Recherche du LTCI''.
+	\end{itemize}
+\end{frame}
+
+
+
+%-------------------------------------------------------------------------------
+\begin{frame}
+	\frametitle{Integration DTIS/SEAS: projet de recherche}
+	
+	\begin{itemize}
+		\item \textbf{Contexte équipe :}
+		\begin{itemize}
+			\item Spécification, conception, développement et analyse de systèmes autonomes.
+		\end{itemize}
+		\item \textbf{Proposition:}
+		\begin{itemize}
+			\item Adaptation du comportement des systèmes autonomes en prennant en compte.
+		\end{itemize}
+	\end{itemize}
+	\begin{columns}
+		\begin{column}{.45\textwidth}
+			\textbf{Thème 1 :}
+		\end{column}
+		\begin{column}{.45\textwidth}
+			\textbf{Thème 2 :} 
+		\end{column}
+	\end{columns}
+	
+\end{frame}
+
+%-------------------------------------------------------------------------------
+\begin{frame}
+	\frametitle{Integration DTIS/SEAS: compétences}
+		
+	\begin{displayquote}
+		\begin{itemize}
+			\item \textcolor[rgb]{0.2,0.5,0.2}{Formal specification languages}
+			\item \textcolor[rgb]{0.2,0.5,0.2}{Languages for modeling system architectures or their behavior}
+			\item \textcolor[rgb]{0.2,0.5,0.2}{Formal verification} or \textcolor[rgb]{0.2,0.5,0.2}{real-time 
+			analysis techniques}
+			\item Architectures and algorithms for decision-making, from task planning to execution management
+			\item Decision-making and multi-machine mission management architectures, distributed between 
+			ground stations and onboard systems
+			\item \textcolor[rgb]{0.2,0.5,0.2}{Tools and methods for installation on physical platforms}
+		\end{itemize}
+	\end{displayquote}
+
+	Repris du site \url{https://www.onera.fr/en/dtis/research-units}
+	
 \end{frame}
 
 %-------------------------------------------------------------------------------
 \begin{frame}
 	\frametitle{Bilan de candidature}
+	
+	\begin{itemize}
+		\item \textbf{Intégration DTIS/SEAS}
+	\end{itemize}
 \end{frame}
 
 \end{document} 
