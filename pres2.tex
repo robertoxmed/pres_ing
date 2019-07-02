@@ -84,7 +84,7 @@
 %tables
 \usepackage[french]{babel}
 \usepackage{csquotes}
-
+\usepackage{adjustbox}
 \usepackage[font=tiny]{subfig}
 
 \usepackage{pgfplots}
@@ -162,7 +162,7 @@ Docteur en informatique de Télécom ParisTech\\
 	\centering
 	\textbf{Optimisation des techniques d'ordonnancement pour des systèmes 
 	embarqués critiques}
-	\begin{itemize}
+	\begin{enumerate}
 		\item Criticité mixte sur architectures multi-c\oe{}urs 
 		avec tâches dépendantes.
 		\begin{itemize}
@@ -174,8 +174,9 @@ Docteur en informatique de Télécom ParisTech\\
 		\item Contraintes énergétiques pour des systèmes temps-réel.
 		\begin{itemize}
 			\item Mise en évidence des limites des approches existantes.
+			\item Adoption des modèles probabilistes pour des techniques de réduction d'énergie.
 		\end{itemize}
-	\end{itemize}
+	\end{enumerate}
 \end{frame}
 
 %-------------------------------------------------------------------------------
@@ -227,11 +228,52 @@ Docteur en informatique de Télécom ParisTech\\
 	\end{enumerate}	
 \end{frame}
 
-%-------------------------------------------------------------------------------
+%------------------------------------------------------------------------------
 
 \begin{frame}
-	\frametitle{Limites des approches existantes}
+	\frametitle{Modèle MC : Ordonnancement avec transition de modes}
+	\begin{itemize}
+		\item Exemple : tâches HI: $\tau_1, \tau_3$. tâches LO: $\tau_2, \tau_4$.
+		\item On assume l'ordonnancement suivant.
+		\item<2> Timing Failure Event (TFE) $\rightarrow$ Transition de mode. 
+		$\rightarrow$ \textbf{potentiel manque d'échéance}.
+	\end{itemize}
+	
+	\begin{figure}
+		\includegraphics[width=7cm]{figs/mode_transition0}
+	\end{figure}
+	
+	\begin{figure}
+		\hspace{1cm}
+		\includegraphics<2>[width=8.2cm]{figs/mode_transition}
+	\end{figure}
+	
 \end{frame}
+
+%------------------------------------------------------------------------------
+
+\begin{frame}
+	\frametitle{Modèle MC : Disponibilité des tâches LO-criticality}
+	\begin{itemize}
+		\item Exemple : même lot de tâches d'avant.
+	\end{itemize}
+	\begin{figure}
+		\subfloat{
+			\includegraphics<1->[width=7cm]{figs/avail_motiv0.pdf}}
+		
+		\subfloat{
+			\includegraphics<2->[width=7cm]{figs/avail_motiv1.pdf}}
+	\end{figure}
+	
+	\begin{itemize}
+		\item<2-> Ordonnançabilité \textit{mais} tâches LO-criticality interrompues :
+		ces services ne sont plus disponibles.
+	\end{itemize}
+\end{frame}
+
+%------------------------------------------------------------------------------
+\subsection{DAGs à criticité mixte}
+%------------------------------------------------------------------------------
 
 \begin{frame}
 	\frametitle{Mixed-Criticality Directed Acyclic Graphs}
@@ -266,29 +308,438 @@ Docteur en informatique de Télécom ParisTech\\
 	\end{columns}
 \end{frame}
 
+%-------------------------------------------------------------------------------
+%
+%\begin{frame}
+%	\frametitle{Limites des approches existantes}
+%	
+%	\begin{alertblock}{Ordonnancement}
+%		\begin{itemize}
+%			\item Creation de clusters pour ordonnancer des DAGs.
+%			\item Généralization à $N$ niveaux.
+%		\end{itemize}
+%	\end{alertblock}
+%	
+%	\begin{alertblock}{Disponibilité}
+%		\begin{itemize}
+%			\item Modèle MC classique interrompt les services moins critiques.
+%			\item Rarement reprise de ces services.
+%		\end{itemize}
+%	\end{alertblock}
+%\end{frame}
+
+%------------------------------------------------------------------------------
+
+\begin{frame}
+	\frametitle{Problème : ordonnancement MC pour DAGs sur multi-c\oe{}urs}
+	\centering
+	\begin{itemize}
+		\item Ordonnancement pour DAG : problème \textbf{NP-complet}.
+		\begin{itemize}
+			\item List Scheduling, ordonnanceur TR avec analyse du temps de réponse
+			\item \textbf{Pas de variation sur le temps d'exécution} dans la littérature.
+			\item \textbf{Pas de transition de modes pour le système}.
+		\end{itemize}
+		\item<2-> Ordonnancement MC difficile : problème \textbf{NP-difficile}.
+		\begin{itemize}
+			\item<2-> Majorité des ordonnanceurs (\emph{e.g.} EDF-vd, MC-Fluid) pour lot de tâches 
+			\textbf{indépendantes}.
+			\item<2-> Quand les contraintes de précédance sont considérées , 
+			\textbf{systèmes sont sur-dimensionnés.}
+		\end{itemize}
+		
+	\end{itemize}
+	
+	\begin{block}{}<3->
+		\textbf{Conclusion}: on a besoin de définir des nouvelles méthodes d'ordonnancement efficaces.
+	\end{block}
+	
+\end{frame}
+
+%------------------------------------------------------------------------------
+\subsection{Heuristique d'ordonnancement}
+%------------------------------------------------------------------------------
+
+\begin{frame}
+	\frametitle{Assurer le changement de mode : Safe Transition Property}
+	\begin{itemize}
+		\item \emph{Intuition}: Pour tout instant $t$, temps d'exécution donné aux tâches HI dans le 
+		mode LO, 
+		doit être supérieur ou égal au temps d'exécution donné en mode HI.
+		\item $\psi_i^{\chi}(t_1, t_2)$: temps d'exécution donné à la tâche $\tau_i$.
+	\end{itemize}
+	
+	\begin{figure}
+		\includegraphics[width=7cm]{figs/proof_case3.pdf}
+	\end{figure}
+	
+	\begin{exampleblock}{Safe Transition Property}
+		\begin{equation}
+		\psi_i^{LO}(r_{i,k}, t) < C_i(LO) \implies \psi_i^{LO}(r_{i,k}, t) 
+		\geq \psi_i^{HI}(r_{i,k},t).
+		\label{eq:condswitch}
+		\end{equation}
+	\end{exampleblock}
+\end{frame}
+
+%------------------------------------------------------------------------------
+
+\begin{frame}
+	\frametitle{Meta-heuristic for MC-DAG scheduling}
+	
+	\begin{itemize}
+		\item Résoudre le complexe problème d'ordonnancement \emph{hors-ligne} grâce à des 
+		\textbf{tables 
+		d'ordonnancement}:
+		\begin{itemize}
+			\item Plus facile à vérifier et à certifier.
+			\item Plus facile pour calculer $\psi_i^\chi$, forcer la \textbf{Safe Trans. Prop.}
+		\end{itemize}
+	\end{itemize}
+	
+	\begin{exampleblock}{\textsc{Mh-McDag}}
+		\begin{itemize}
+			\item Calculer la table d'ordonnancement dans le mode HI.
+			\item Calculer la table d'ordonnancement dans le mode LO,\\
+			en forçant  \textbf{Safe Trans. Prop.}
+			\item Changement de mode $\rightarrow$ changement de table d'ordonnancement.
+		\end{itemize}
+	\end{exampleblock}
+\end{frame}
+
+%------------------------------------------------------------------------------
+
+\begin{frame}
+	\frametitle{Contraintes sur l'exécution des tâches HI-criticality (1/2)}
+	\setcounter{subfigure}{0}
+	\begin{itemize}
+		\item Approches existantes basés sur des algorithmes à liste (LIst Scheduling).
+		\item Calcul de deux ordres de priorité \emph{indépendants}.
+		\item Deux tables d'ordonnancement sont produites.
+		\item Tâches HI-criticality ordonnancées dès que possible (ASAP).
+		\begin{itemize}
+			\item Assurer la transition de mode.
+		\end{itemize}
+		\item Implémentation implicite de \textsc{Mh-McDAG}.
+	\end{itemize}
+	
+\end{frame}
+
+%------------------------------------------------------------------------------
+
+\begin{frame}
+	\frametitle{Contraintes sur l'exécution des tâches HI-criticality (2/2)}
+	
+	\begin{figure}
+		\vspace{-0.5cm}
+		\begin{tabular}{cc}
+			\adjustbox{valign=c}{\subfloat[Single MC-DAG system]{
+					\includegraphics[width=5cm]{figs/ada_lo.pdf}
+				}
+			}
+			
+			&
+			
+			\adjustbox{valign=c}{\begin{tabular}{@{}c@{}}
+					\subfloat[$S_{HI}$ scheduling 
+					table]{\includegraphics[width=5cm]{figs/ada_baruah_shi.pdf}
+						\label{subfig:sched_baruah_shi}}\\
+					
+					\subfloat[$S_{LO}$ scheduling 
+					table]{\includegraphics[width=5cm]{figs/ada_baruah_slo.pdf}
+						\label{subfig:sched_baruah_slo}}
+					\label{fig:sched_baruah_single}
+			\end{tabular}}
+		\end{tabular}
+		
+	\end{figure}
+	
+	\begin{figure}
+		\centering
+		
+	\end{figure}
+	
+	\begin{alertblock}{}
+		\begin{itemize}
+			\item Non-ordonnançable avec 18 TUs et 2 c\oe{}urs.
+			\item Tâche $B$ prête à être exécutée après 1 TU, constamment preemptée.
+			\begin{itemize}
+				\item Temps de réponse des tâches LO-criticality affecté.
+			\end{itemize}
+		\end{itemize}
+	\end{alertblock}
+	
+\end{frame}
+
+%------------------------------------------------------------------------------
+
+\begin{frame}
+	\frametitle{Relaxation des tâches HI-criticality (1/2)}
+	\begin{itemize}
+		
+		\item \emph{Exécution au plus tard (ALAP)} des tâches HI dans le mode HI.
+		\begin{itemize}
+			\item Transformer le graphe dans son \emph{dual} et calculer l'ordonnancement.
+		\end{itemize}
+		
+		
+	\end{itemize}
+	
+	
+	\begin{figure}
+		\vspace{-0.5cm}
+		\begin{tabular}{cc}
+			\adjustbox{valign=c}{\subfloat{
+					\includegraphics<1|handout:0>[width=5cm]{figs/ada_hi_star0.pdf}
+					\includegraphics<2->[width=5cm]{figs/ada_hi_star.pdf}
+				}
+			}
+			
+			&
+			
+			\adjustbox{valign=c}{\begin{tabular}{@{}c@{}}
+					\subfloat{
+						\includegraphics<3->[width=5cm]{figs/ada_us_shi0.pdf}
+					} \\
+					
+					\subfloat{
+						\includegraphics<4->[width=5cm]{figs/ada_us_shi.pdf}
+					}
+			\end{tabular}}
+		\end{tabular}
+		
+	\end{figure}
+\end{frame}
+
+%------------------------------------------------------------------------------
+
+\begin{frame}
+	\frametitle{Relaxation des tâches HI-criticality  (2/2)}
+	\begin{itemize}
+		\item \emph{Prioritization plus précise}: tâches HI-criticality preemptent pour respecter 
+		\textbf{Safe Trans. Prop.}
+	\end{itemize}
+	
+	\setcounter{subfigure}{0}
+	
+	
+	\begin{figure}
+		\vspace{-0.5cm}
+		\begin{tabular}{cc}
+			\adjustbox{valign=c}{\subfloat[Single MC-DAG system]{
+					\includegraphics[width=5cm]{figs/ada_lo.pdf}
+				}
+			}
+			
+			&
+			
+			\adjustbox{valign=c}{\begin{tabular}{@{}c@{}}
+					\subfloat[ALAP scheduling in HI mode]{
+						\includegraphics[width=5cm]{figs/ada_us_shi.pdf}} \\
+					
+					\subfloat[ASAP scheduling in LO mode]{
+						\includegraphics[width=5cm]{figs/ada_us_slo.pdf}}
+			\end{tabular}}
+		\end{tabular}
+		
+	\end{figure}
+	
+	
+	\begin{itemize}
+		\item Tâches LO-criticality ont plus de timeslots utilisables.
+	\end{itemize}
+\end{frame}
+
+%------------------------------------------------------------------------------
+\section {Global multi-periodic scheduling}
+%------------------------------------------------------------------------------
+\newcommand{\light}[1]{\textcolor{gray}{#1}}
+
+\begin{frame}
+	\frametitle{MC-DAG multi-périodique}
+	Approche existante:
+	\begin{itemize}
+		\item Fédéré: MC-DAGs catégorisés comme \emph{light} ou \emph{heavy}.
+		\begin{itemize}
+			\item DAGs light transformés en tâches séquentielles.
+			\item DAGs heavy, $U_{max} > 1$, nécessite plus d'un c\oe{}ur pour s'exécuter.
+		\end{itemize}
+		\item Clusters pour ordonnancer des MC-DAGs heavy sporadiques.
+		\item Tables d'ordonnancement calculées pour chaque cluster.
+		\item \textbf{Mauvaise gestion des ressources}: n\oe{}uds de MC-DAGs différents ne peuvent pas 
+		partager des c\oe{}urs.
+	\end{itemize}
+\end{frame}
+
+%------------------------------------------------------------------------------
+
+\begin{frame}
+	\frametitle{Un exemple de systèmes MC multi-périodique}
+	\setcounter{subfigure}{0}
+	
+	\begin{figure}
+		\vspace{-0.7cm}
+		\begin{tabular}{cc}
+			\adjustbox{valign=c}{\subfloat[MCS multi-périodique]{
+					\includegraphics[width=5cm]{figs/multidag_lo.pdf}}}
+			
+			&
+			
+			\adjustbox{valign=c}{\begin{tabular}{@{}c@{}}
+					\subfloat[Approche fédérée : mode HI-criticality]{
+						
+						\includegraphics[width=5.5cm]{figs/multiple_shi_federated.pdf}
+						\label{subfig:sched_federated_shi}
+					}\\
+					
+					\subfloat[Approche fédérée : mode LO-criticality]{
+						
+						\includegraphics[width=5.5cm]{figs/multiple_slo_federated.pdf}
+						\label{subfig:sched_federated_slo}
+					}
+			\end{tabular}}
+		\end{tabular}
+	\end{figure}
+	
+	\begin{itemize}
+		\item Au minimum 2 clusters de 2 c\oe{}urs.
+		\item Utilisation maximale du système inférieure à 3.
+	\end{itemize}
+\end{frame}
+
+%------------------------------------------------------------------------------
+
+\begin{frame}
+	\frametitle{Approche globale pour MC-DAGs multi-périodiques}
+	
+	\begin{itemize}
+		\item \textbf{Safe Trans. Prop.} utilisable dans le cas multi-périodique.
+		\item Plusieurs implémentations possibles grâce à la \textbf{généricité} de \textsc{Mh-McDag}.
+	\end{itemize}
+	
+	\begin{table}
+		\begin{tabular}{|c|c|}
+			\hline
+			\textbf{Implémentation} & \textbf{Ordre de priorité}                                           \\ \hline
+			G-EDF                   & $D_{i,k}^\chi = d_{i,k} - 
+			CP_i^{\chi}$                            \\ \hline
+			G-LLF                   & $L_{i,k}^\chi (t) = d_{i,k} - t - 
+			(CP_i^{\chi} + R_{i,k}^{\chi})$ \\ \hline
+			Hybrid                  & G-EDF HI mode/G-LLF LO 
+			mode                                      \\ \hline
+		\end{tabular}
+	\end{table}
+	%
+	%	\begin{itemize}
+	%		\item $d_{i,k}$ deadline of the $k$-th activation of the MC-DAG.
+	%		\item $CP_i^{\chi}$ critical path to the vertex.
+	%		\item $t$ current time slot.
+	%		\item $R_{i,k}^{\chi}$ remaining execution time.
+	%		\begin{itemize}
+	%			\item Initialized with $C_i(LO)$ or $C_i(HI)$.
+	%		\end{itemize}Various implementations thanks to
+	%	\end{itemize}
+	
+\end{frame}
+
+
+%------------------------------------------------------------------------------
+
+\begin{frame}
+	\frametitle{\textsc{G-alap} scheduling tables}
+	\begin{columns}
+		\begin{column}{.5\textwidth}
+			\begin{figure}
+				\centering
+				\subfloat[\textsc{G-alap-edf} HI mode]{
+					\includegraphics[width=5.5cm]{figs/multiple_shi_edf.pdf}
+					\label{subfig:multiple_gedf_hi}
+				}
+				
+				\subfloat[\textsc{G-alap-edf} LO mode]{
+					\includegraphics[width=5.5cm]{figs/multiple_slo_edf.pdf}
+					\label{subfig:multiple_gedf_lo}
+				}
+			\end{figure}
+		\end{column}
+		
+		\begin{column}{.5\textwidth}
+			\begin{figure}
+				
+				\subfloat[\textsc{G-alap-llf} HI mode]{
+					\includegraphics[width=5.5cm]{figs/multiple_shi.pdf}
+					\label{subfig:multiple_gllf_hi}
+				}
+				
+				\subfloat[\textsc{G-alap-llf} LO mode]{
+					\includegraphics[width=5.5cm]{figs/multiple_slo.pdf}		
+					
+					\label{fig:multiple_slo}
+				}
+				
+			\end{figure}
+		\end{column}
+	\end{columns}
+	
+	
+	\begin{itemize}
+		\item MC-correct scheduling tables found with \textbf{only 3 cores}.
+		\item Efficient multi-periodic MC-DAG scheduling.
+	\end{itemize}
+\end{frame}
+
+%------------------------------------------------------------------------------
+\subsection{Multiple criticality levels}
+%------------------------------------------------------------------------------
+
+\begin{frame}
+	\frametitle{Généralisation de la Safe Transition Property}
+	
+	\begin{itemize}
+		\item \textbf{Problème}: Nécessite calculer plus de tables d'ordonnancement.
+	\end{itemize}
+	
+	\begin{exampleblock}{Safe Transition Property Généralisée}
+		\begin{equation}
+		\psi_i^{\chi_\ell} (r_{i,k}, t) < C_i(\chi_\ell) \implies 
+		\psi_i^{\chi_\ell}(r_{i,k}, t) \geq 
+		\psi_i^{\chi_{\ell+1}}(r_{i,k},t).
+		\label{eq:start_n_mode_lo}
+		\end{equation}
+	\end{exampleblock}
+	
+	\begin{exampleblock}{\textsc{GMH-McDag}}
+		Méta-heuristique pour ordonanncement MC-DAG multi-périodique  avec nombre arbitraire de 
+		niveaux de criticité.
+		\begin{enumerate}
+			\item Ordonnancer le système en ordre décroissant.
+			\item Pour tous les niveaux de criticité, forcer la \textbf{Safe Trans. Prop. généralisée}.
+		\end{enumerate}
+	\end{exampleblock}
+\end{frame}
+
+
 %------------------------------------------------------------------------------
 \subsection{Outil de génération}
 %------------------------------------------------------------------------------
 
 \begin{frame}
-	\frametitle{Unbiased generation tool}		
+	\frametitle{Outil de génération non-biaisé}		
 	\begin{itemize}
-		\item Integrate concepts of different communities.
+		\item Intègre des concepts de différentes communautés.
 		\begin{itemize}
-			\item Avoid particular DAG shapes: create vertices using 
-			layers.
-			\item Distribute system utilization 
-			uniformly.
+			\item Éviter des formes particulières pour les DAGs :créer des n\oe{}uds par couches.
+			\item Distribuer l'utilisation du système de manière uniforme.
 		\end{itemize}
-		\item Many parameters need to be taken into account.
+		\item Plusieurs paramètre doivent être pris en considération.
 		\begin{itemize}
-			\item Utilization of the system.
-			\item Number of MC-DAGs.
-			\item Number of vertices.
-			\item Probability to have an edge.
-			\item Ratio HI/LO-criticality tasks.
+			\item Utilisation du système.
+			\item Nombre de MC-DAGs.
+			\item Nombre de n\oe{}uds par MC-DAG.
+			\item Probabilité d'avoir un arc.
+			\item Ratio tâches HI/LO-criticality.
 		\end{itemize}
-		\item Integration into an open-source framework~\footnote{MC-DAG 
+		\item Intégré dans un framework open-source~\footnote{MC-DAG 
 			framework - \url{https://github.com/robertoxmed/MC-DAG}}.
 	\end{itemize}
 \end{frame}
@@ -296,22 +747,19 @@ Docteur en informatique de Télécom ParisTech\\
 %------------------------------------------------------------------------------
 
 \begin{frame}
-	\frametitle{Unbiased generation algorithm}
-	
+	\frametitle{Algorithme de génération non-biaisé}
+		\setcounter{subfigure}{0}
 	\begin{columns}
 		\begin{column}{.6\textwidth}
-			\begin{exampleblock}{MC-DAG generator}
+			\begin{exampleblock}{Générateur MC-DAG}
 				\begin{enumerate}
-					\item<1-> Distribute utilization.
-					\item<1-> Draw a random deadline.
-					\item<2-> For each criticality level:
+					\item<1-> Distribuer l'utilisation.
+					\item<1-> Générer un deadline aléatoire.
+					\item<2-> Pour chaque niveau de criticité:
 					\begin{itemize}
-						\item<3-> \textbf{\textit{Vertex generation phase}} by 
-						layers.
-						\item<4-> \textbf{\textit{Incorporation of edges}}
-						following a given probability.
-						\item<5-> \textbf{\textit{Reduction phase}} reach a 
-						reduction factor.
+						\item<3-> \textbf{\textit{Phase de génération des n\oe{}uds}} par couches.
+						\item<4-> \textbf{\textit{Intégration des arcs}}.
+						\item<5-> \textbf{\textit{Phase de réduction}} atteindre un facteur de réduction.
 					\end{itemize}
 				\end{enumerate}
 			\end{exampleblock}
@@ -329,9 +777,12 @@ Docteur en informatique de Télécom ParisTech\\
 \end{frame}
 
 %------------------------------------------------------------------------------
+\subsection{Resultats expérimentaux}
+%------------------------------------------------------------------------------
 
 \begin{frame}
-	\frametitle{Experimental results}
+	\frametitle{Resultats expérimentaux}
+	\framesubtitle{Taux d'acceptation pour systèmes MC synthétiques}
 	
 	\begin{figure}
 		\subfloat[\textsc{G-LLF, $|\mathcal{G}| = 1$}]{
@@ -407,13 +858,6 @@ Docteur en informatique de Télécom ParisTech\\
 			\addplot +[gray,fill opacity=0.5] fill between [of=fededf2 and axis];
 			\addplot +[fill opacity=0.5] fill between [of=fededf4 and axis];
 			\addplot +[fill opacity=0.5] fill between [of=fededf5 and axis];
-			
-%			\addlegendentry{\galap, $|\mathcal{CL}| = 2$}
-%			\addlegendentry{\galap, $|\mathcal{CL}| = 4$}
-%			\addlegendentry{\galap, $|\mathcal{CL}| = 5$}
-%			\addlegendentry{\textsc{Fed}, $|\mathcal{CL}| = 2$}
-%			\addlegendentry{\textsc{Fed}, $|\mathcal{CL}| = 4$}
-%			\addlegendentry{\textsc{Fed}, $|\mathcal{CL}| = 5$}
 			
 			\end{axis}
 			\end{tikzpicture}
@@ -574,130 +1018,6 @@ Docteur en informatique de Télécom ParisTech\\
 	\end{figure}
 \end{frame}
 
-%\begin{frame}
-%	\frametitle{Expe}
-%	
-%	\begin{figure}
-%		
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%		
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%		
-%		\subfloat[\textsc{G-LLF, $|\mathcal{G}| = 2$}]{
-%			\begin{tikzpicture}[every mark/.append style={mark size=1.2pt}]
-%			\begin{axis}[	height=6cm, width=0.35\textwidth,
-%			legend style={nodes={scale=0.4, transform shape}},
-%			legend pos=north east,grid,
-%			log ticks with fixed point,
-%			ytick={0, 0.1, ..., 1.1},
-%			xtick={0.2, 0.3, ..., 1.1},
-%			xmin=0.25,	xmax=1,cycle list name=exotic,
-%			ymin=0]
-%			\path[name path=axis] (axis cs:0.25,0) -- (axis cs:1,0);
-%			
-%			\addplot+[name path=llf2] table [x=Unorm, y=LLF] 
-%			{data/sched/sched_l2_d2.csv};
-%			\addplot+[name path=llf4] table [x=Unorm, y=LLF] 
-%			{data/sched/sched_l4_d2.csv};
-%			\addplot+[name path=llf5] table [x=Unorm, y=LLF] 
-%			{data/sched/sched_l5_d2.csv};
-%			
-%			\addplot[name path=fedllf2] 	table 	[x=Unorm, y=FEDLLF] 
-%			{data/sched/sched_l2_d2.csv};
-%			\addplot+[name path=fedllf4] table [x=Unorm, y=FEDLLF] 
-%			{data/sched/sched_l4_d2.csv};
-%			\addplot+[name path=fedllf5] table 	[x=Unorm, y=FEDLLF] 
-%			{data/sched/sched_l5_d2.csv};
-%			
-%			\pgfplotsset{cycle list shift=-6}
-%			\addplot +[fill opacity=0.5] fill between [of=llf2 and axis];
-%			\addplot +[fill opacity=0.5] fill between [of=llf4 and axis];
-%			\addplot +[fill opacity=0.5] fill between [of=llf5 and axis];
-%			\addplot +[gray,fill opacity=0.5] fill between [of=fedllf2 and axis];
-%			\addplot +[fill opacity=0.5] fill between [of=fedllf4 and axis];
-%			\addplot +[fill opacity=0.5] fill between [of=fedllf5 and axis];
-%			\end{axis}
-%			\end{tikzpicture}
-%			\label{subfig:acceptance-llf-d2}
-%		}
-%		\subfloat[\textsc{G-EDF, $|\mathcal{G}| = 2$}]{
-%			\begin{tikzpicture}[every mark/.append style={mark size=1.2pt}]
-%			\begin{axis}[	height=6cm, width=0.35\textwidth,
-%			legend style={nodes={scale=0.4, transform shape}},
-%			legend pos=north east,grid,
-%			log ticks with fixed point,
-%			ytick={0, 0.1, ..., 1.1},
-%			xtick={0.2, 0.3, ..., 1.1},
-%			xmin=0.25,	xmax=1,cycle list name=exotic,
-%			ymin=0]
-%			\path[name path=axis] (axis cs:0.25,0) -- (axis cs:1,0);
-%			
-%			\addplot+[name path=edf2] table [x=Unorm, y=EDF] 
-%			{data/sched/sched_l2_d2.csv};
-%			\addplot+[name path=edf4] table [x=Unorm, y=EDF] 
-%			{data/sched/sched_l4_d2.csv};
-%			\addplot+[name path=edf5] table [x=Unorm, y=EDF] 
-%			{data/sched/sched_l5_d2.csv};
-%			
-%			\addplot[name path=fededf2] 	table 	[x=Unorm, y=FEDEDF] 
-%			{data/sched/sched_l2_d2.csv};
-%			\addplot+[name path=fededf4] table [x=Unorm, y=FEDEDF] 
-%			{data/sched/sched_l4_d2.csv};
-%			\addplot+[name path=fededf5] table 	[x=Unorm, y=FEDEDF] 
-%			{data/sched/sched_l5_d2.csv};
-%			
-%			\pgfplotsset{cycle list shift=-6}
-%			\addplot +[fill opacity=0.5] fill between [of=edf2 and axis];
-%			\addplot +[fill opacity=0.5] fill between [of=edf4 and axis];
-%			\addplot +[fill opacity=0.5] fill between [of=edf5 and axis];
-%			\addplot +[gray,fill opacity=0.5] fill between [of=fededf2 and axis];
-%			\addplot +[fill opacity=0.5] fill between [of=fededf4 and axis];
-%			\addplot +[fill opacity=0.5] fill between [of=fededf5 and axis];
-%			\end{axis}
-%			\end{tikzpicture}
-%			\label{subfig:acceptance-edf}
-%		}
-%		\subfloat[\textsc{G-EDZL, $|\mathcal{G}| = 2$}]{
-%			\begin{tikzpicture}[every mark/.append style={mark size=1.2pt}]
-%			\begin{axis}[	height=6cm, width=0.35\textwidth,
-%			legend style={nodes={scale=0.4, transform shape}},
-%			legend pos=north east,grid,
-%			log ticks with fixed point,
-%			ytick={0, 0.1, ..., 1.1},
-%			xtick={0.2, 0.3, ..., 1.1},
-%			xmin=0.25,	xmax=1,cycle list name=exotic,
-%			ymin=0]
-%			
-%			\path[name path=axis] (axis cs:0.25,0) -- (axis cs:1,0);
-%			
-%			\addplot+[name path=ezl2] table [x=Unorm, y=EZL] 
-%			{data/sched/sched_l2_d2.csv};
-%			\addplot+[name path=ezl4] table [x=Unorm, y=EZL] 
-%			{data/sched/sched_l4_d2.csv};
-%			\addplot+[name path=ezl5] table [x=Unorm, y=EZL] 
-%			{data/sched/sched_l5_d2.csv};
-%			
-%			\addplot[name path=fedezl2] 	table 	[x=Unorm, y=FEDEZL] 
-%			{data/sched/sched_l2_d2.csv};
-%			\addplot+[name path=fedezl4] table [x=Unorm, y=FEDEZL] 
-%			{data/sched/sched_l4_d2.csv};
-%			\addplot+[name path=fedzl5] table 	[x=Unorm, y=FEDEZL] 
-%			{data/sched/sched_l5_d2.csv};
-%			
-%			\pgfplotsset{cycle list shift=-6}
-%			\addplot +[fill opacity=0.5] fill between [of=ezl2 and axis];
-%			\addplot +[fill opacity=0.5] fill between [of=ezl4 and axis];
-%			\addplot +[fill opacity=0.5] fill between [of=ezl5 and axis];
-%			\addplot +[gray,fill opacity=0.5] fill between [of=fedezl2 and axis];
-%			\addplot +[fill opacity=0.5] fill between [of=fedezl4 and axis];
-%			\addplot +[fill opacity=0.5] fill between [of=fedzl5 and axis];
-%			
-%			\end{axis}
-%			\end{tikzpicture}
-%			\label{subfig:acceptance-ezl-d2}
-%		}
-%	\end{figure}
-%\end{frame}
 
 %-------------------------------------------------------------------------------
 \begin{frame}
@@ -737,12 +1057,16 @@ Docteur en informatique de Télécom ParisTech\\
 		\end{itemize}
 		\item \textbf{Proposition:}
 		\begin{itemize}
-			\item Adaptation du comportement des systèmes autonomes en prennant en compte.
+			\item Amélioration des contraintes temps-réel et énergétiques sur les systèmes autonomes.
 		\end{itemize}
 	\end{itemize}
 	\begin{columns}
 		\begin{column}{.45\textwidth}
-			\textbf{Thème 1 :}
+			\textbf{Thème 1 :} Analyse et améliorations des contraintes temps-réel (\textit{court-terme}).
+			\begin{itemize}
+				\item Développement/amélioration de middleware pour des systèmes robotiques.
+				\item Analyse temps-réel formel et expérimentale pour architecture robotique.
+			\end{itemize}
 		\end{column}
 		\begin{column}{.45\textwidth}
 			\textbf{Thème 2 :} 
@@ -777,6 +1101,15 @@ Docteur en informatique de Télécom ParisTech\\
 	\frametitle{Bilan de candidature}
 	
 	\begin{itemize}
+		\item \textbf{Compétences complémentaires}
+		\begin{itemize}
+			\item Ordonnancements temps-réels sous différents modèles d'exécution (criticité mixte, 
+			DVFS).
+		\end{itemize}
+		\item \textbf{Expérience de recherche}
+		\begin{itemize}
+			\item Intégration à des équipes différentes sous des objectifs de recherche différents.
+		\end{itemize}
 		\item \textbf{Intégration DTIS/SEAS}
 	\end{itemize}
 \end{frame}
