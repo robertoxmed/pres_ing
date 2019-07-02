@@ -135,7 +135,7 @@ Docteur en informatique de Télécom ParisTech\\
 	\textbf{2015 - Master 2 Recherche} en Informatique - 
 			Université Pierre et Marie Curie (Paris 6)
 		\begin{itemize}
-			\item Spécialité : Systèmes et Applications Distribués
+			\item Spécialité : Systèmes et Applications Distribués.
 			\item Stage à Télécom ParisTech : Conception et développement de 
 			systèmes critiques sur multi-c\oe{}urs.
 		\end{itemize}
@@ -143,15 +143,15 @@ Docteur en informatique de Télécom ParisTech\\
 	\textbf{2019 - Doctorat} en Informatique - Télécom ParisTech
 		\begin{itemize}
 			\item Déploiement de systèmes à flots de données en criticité mixte 
-			pour architectures multi-c\oe{}urs
+			pour architectures multi-c\oe{}urs.
 			\item Soutenance en Janvier 2019.
 			\item \textbf{Assistant d'enseigment} 100h/3ans - élèves 
-			ingénieurs/Master/formation continue
+			ingénieurs/Master/formation continue.
 		\end{itemize}
 	\textbf{2019 - Post-doctorat} Inria, Équipe Kopernic (Paris)
 		\begin{itemize}
 			\item Analyse probabiliste des systèmes temps-réel avec contraintes 
-			énergétiques
+			énergétiques.
 		\end{itemize}
 \end{frame}
 
@@ -551,7 +551,7 @@ Docteur en informatique de Télécom ParisTech\\
 \end{frame}
 
 %------------------------------------------------------------------------------
-\section {Global multi-periodic scheduling}
+\subsection {Ordonnancement global multi-périodique}
 %------------------------------------------------------------------------------
 \newcommand{\light}[1]{\textcolor{gray}{#1}}
 
@@ -646,7 +646,7 @@ Docteur en informatique de Télécom ParisTech\\
 %------------------------------------------------------------------------------
 
 \begin{frame}
-	\frametitle{\textsc{G-alap} scheduling tables}
+	\frametitle{\textsc{G-alap} : tables d'ordonnancement}
 	\begin{columns}
 		\begin{column}{.5\textwidth}
 			\begin{figure}
@@ -683,13 +683,13 @@ Docteur en informatique de Télécom ParisTech\\
 	
 	
 	\begin{itemize}
-		\item MC-correct scheduling tables found with \textbf{only 3 cores}.
-		\item Efficient multi-periodic MC-DAG scheduling.
+		\item Tables d'ordonnancement sur \textbf{ 3 c\oe{}urs seulement}.
+		\item Ordonnancement MC-DAG multi-périodique efficace.
 	\end{itemize}
 \end{frame}
 
 %------------------------------------------------------------------------------
-\subsection{Multiple criticality levels}
+\subsection{Niveaux de criticité multiple}
 %------------------------------------------------------------------------------
 
 \begin{frame}
@@ -718,7 +718,8 @@ Docteur en informatique de Télécom ParisTech\\
 	\end{exampleblock}
 \end{frame}
 
-
+%------------------------------------------------------------------------------
+\section{Évaluation empirique}
 %------------------------------------------------------------------------------
 \subsection{Outil de génération}
 %------------------------------------------------------------------------------
@@ -1018,6 +1019,184 @@ Docteur en informatique de Télécom ParisTech\\
 	\end{figure}
 \end{frame}
 
+%-------------------------------------------------------------------------------
+\section{Disponibilité pour systèmes MC}
+%-------------------------------------------------------------------------------
+
+\begin{frame}
+	\frametitle{Problème : Disponibilité dans les systèmes MC}
+	
+	
+	\centering
+
+	\textbf{Criticité mixte et disponibilité}
+		\vspace{.5cm}
+		\begin{itemize}
+			\item \textbf{Modèle Discard MC} meilleurs résultats d'ordonnancement.
+			\item Tâches LO-criticality complètement interrompues.
+			\item Tâches LO-criticality sont aussi importantes (QoS).
+			\item Pas d'évaluation de disponibilité pour tâches dépendantes dans la littérature.
+			\begin{itemize}
+				\item Difficile de justifier l'applicabilité du modèle MC.
+			\end{itemize}
+		\end{itemize}
+	
+\end{frame}
+
+%-------------------------------------------------------------------------------
+
+\begin{frame}
+	\frametitle{Quantification : étapes de modélisation}
+	
+	\begin{enumerate}
+		\item Tables d'ordonnancement (grâce à notre méta-heuristique).
+		\item<2-> \textbf{Modèle de fautes} : probabilité d'avoir une TFE.
+		\item<3-> \textbf{Mécanisme de reprise}: redémarre le mode LO mode après l'hyper-période.
+	\end{enumerate}
+	
+	\begin{columns}
+		\begin{column}{.5\textwidth}
+			\begin{figure}
+				\vspace{-0.5cm}
+				\includegraphics<1|handout:0>[width=4cm]{figs/avail_lo0.pdf}
+				\includegraphics<2->[width=4cm]{figs/avail_lo1.pdf}
+			\end{figure}
+		\end{column}
+		\begin{column}{.5\textwidth}
+			\begin{figure}
+				\includegraphics<1-2|handout:0>[width=5cm]{figs/time_empty.pdf}
+				\includegraphics<3|handout:0>[width=5cm]{figs/recovery_ex1.pdf}
+				\includegraphics<4|handout:0>[width=5cm]{figs/recovery_ex2.pdf}
+				\includegraphics<5|handout:0>[width=5cm]{figs/recovery_ex3.pdf}
+				\includegraphics<6>[width=5cm]{figs/recovery_ex4.pdf}
+			\end{figure}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+%-------------------------------------------------------------------------------
+
+\begin{frame}
+	\frametitle{Amélioration de la disponibilité : tâches temps-réel weakly-hard}
+	\begin{itemize}
+		\item Tolérer un nombre fixe $m$ de fautes sur $k$ exécutions successives.
+		\item Comportement d'une tâche WHRT $(1-2)$-firm:
+	\end{itemize}
+	
+	\begin{figure}
+		\subfloat{
+			\includegraphics[width=5cm]{figs/mkfirm_time3.pdf}
+		}\quad
+		\subfloat{\includegraphics[width=4.5cm]{figs/mkfirm.pdf}}
+	\end{figure}
+\end{frame}
+
+%-------------------------------------------------------------------------------
+
+\begin{frame}
+	\frametitle{Simulations du système : automate probabiliste}
+	\centering
+	\textbf{Problème:} État courant du système dépend des exécution précédantes 
+	executions $\rightarrow$ mémoriser les états précédants.
+	\begin{itemize}
+		\item<2-> \textbf{Solution}: Règles de transformation vers automate PRISM probabiliste.
+		\begin{itemize}
+			\item<3-> \textit{Défi 1}: passage à l'échelle.
+			\item<3-> \textit{Défi 2}: automatisation.
+			
+		\end{itemize}
+		
+	\end{itemize}
+	\setcounter{subfigure}{0}
+	\begin{figure}
+		\vspace{-0.7cm}
+		\subfloat{
+			\includegraphics<4->[width=3.5cm]{figs/mk_r1.pdf}
+			\label{subfig:prism_r1}
+		}
+		\subfloat{
+			\includegraphics<4->[width=3.5cm]{figs/mk_r2.pdf}
+			\label{subfig:prism_r2}
+		}
+		\subfloat{
+			\includegraphics<4->[width=3.5cm]{figs/mk_r3.pdf}
+			\label{subfig:prism_r3}
+		}
+		\label{fig:prism_rules}
+	\end{figure}
+\end{frame}
+
+%------------------------------------------------------------------------------
+
+\begin{frame}
+	\frametitle{Simulations du système: résultats}
+	
+	\begin{figure}
+		\subfloat{
+			\includegraphics[width=7cm]{figs/mk_r4.pdf}
+			\label{subfig:prism_r4}
+		}
+	\end{figure}
+	
+	\begin{table}[]	
+		\centering
+		\begin{tabular}{c|c|c|c|}
+			\cline{2-4}
+			\multicolumn{1}{l|}{}                  & 
+			\multicolumn{3}{c|}{\textbf{Taux de Disponibilité}} \\ \hline
+			\multicolumn{1}{|c|}{\textbf{Sorties}} & Discard MC  & Enhanced FP  
+			& 
+			Enhanced FP + WHRT \\ \hline
+			\multicolumn{1}{|c|}{\textit{E}}       & 95.78900\%    & 
+			96.98900\%     
+			&       \only{\textbf{97.90121\%}}<2->       \\ \hline
+			\multicolumn{1}{|c|}{\textit{F}}       & 98.90000\%      & 
+			98.90000\%       & 
+			\only{98.90099\%}<2->             \\ \hline
+			\multicolumn{1}{|c|}{\textit{H}}       & 97.79000\%     & 
+			98.89000\%      & \only{98.89441\%}<2->         \\ \hline
+		\end{tabular}
+		\label{tab:avail_enhance}
+	\end{table}
+	\begin{itemize}
+		\item<2-> Disponibilité évalué par PRISM en PCTL.
+		\item<2-> Règles de transformation dans le framework MC-DAG.
+	\end{itemize}
+\end{frame}
+
+%-------------------------------------------------------------------------------
+\section{Consommation énergétique pour systèmes embarqués critiques}
+%-------------------------------------------------------------------------------
+
+\begin{frame}
+	\frametitle{Problème: Réduction de la consommation énergétique sous contraintes temps-réelles}
+	\framesubtitle{Sera présenté à RTSOPS 2019}
+	\begin{itemize}
+		\item Réduire la fréquence des processeurs pour consommer moins d'énergie ($\searrow$ tension 
+		$\rightarrow$ $\searrow$ fréquence)
+		\begin{itemize}
+			\item Incrémente le temps d'exécution des tâches.
+		\end{itemize}
+		\item Méthodes Dynamic Voltage and Frequency Scaling (DVFS) existantes ont deux limites majeures:
+		\begin{enumerate}
+			\item Temps d'exécution d'une tâche proportionnel à la fréquence du processeur.
+			\item Réduction énergétique uniquement au niveau du processeur, autres composants (mémoire, 
+			périphériques) ignorés.
+		\end{enumerate}
+	\end{itemize}
+	
+\end{frame}
+
+\begin{frame}
+	\frametitle{Évolution du nombre de cycles sous différentes fréquences}
+	\centering
+	\includegraphics[width=12cm]{figs/cycles.png}
+	\vspace{-.5cm}
+	\begin{itemize}
+		\item Temps d'exécution pas exactement proportionnel $\rightarrow$ mémoire goulot d'étranglement.
+	\end{itemize}
+\end{frame}
+
 
 %-------------------------------------------------------------------------------
 \begin{frame}
@@ -1044,7 +1223,8 @@ Docteur en informatique de Télécom ParisTech\\
 	\end{itemize}
 \end{frame}
 
-
+%-------------------------------------------------------------------------------
+\section{Projet de recherche}
 
 %-------------------------------------------------------------------------------
 \begin{frame}
@@ -1057,19 +1237,23 @@ Docteur en informatique de Télécom ParisTech\\
 		\end{itemize}
 		\item \textbf{Proposition:}
 		\begin{itemize}
-			\item Amélioration des contraintes temps-réel et énergétiques sur les systèmes autonomes.
+			\item Spécification et vérification sous contraintes temps-réelles et non-fonctionnelles pour systèmes 
+			embarqués autonomes.
 		\end{itemize}
 	\end{itemize}
 	\begin{columns}
 		\begin{column}{.45\textwidth}
-			\textbf{Thème 1 :} Analyse et améliorations des contraintes temps-réel (\textit{court-terme}).
+			\textbf{Thème 1 :}  Spécification, analyse et améliorations des contraintes temps-réelles.
 			\begin{itemize}
-				\item Développement/amélioration de middleware pour des systèmes robotiques.
-				\item Analyse temps-réel formel et expérimentale pour architecture robotique.
+				\item Analyse temporelle formelle et expérimentale pour architecture robotique.
+				\item Développement/amélioration des outils TR sur systèmes robotiques.
 			\end{itemize}
 		\end{column}
 		\begin{column}{.45\textwidth}
-			\textbf{Thème 2 :} 
+			\textbf{Thème 2 :} Contraintes non-fonctionnelles dans la prise de décision de systèmes autonomes.
+			\begin{itemize}
+				\item Plans d'exécution avec contraintes énergétiques.
+			\end{itemize}
 		\end{column}
 	\end{columns}
 	
@@ -1105,12 +1289,14 @@ Docteur en informatique de Télécom ParisTech\\
 		\begin{itemize}
 			\item Ordonnancements temps-réels sous différents modèles d'exécution (criticité mixte, 
 			DVFS).
+			\item Connaissances en méthodes formelles et simulations des systèmes temps-réels.
 		\end{itemize}
 		\item \textbf{Expérience de recherche}
 		\begin{itemize}
-			\item Intégration à des équipes différentes sous des objectifs de recherche différents.
+			\item Intégration rapide à différentes équipes de recherche sous des objectifs de différents.
+			\item Travaux validés dans des conférences internationales importantes.
+			\item Recherche dans un cadre industriel : chaire systèmes complexes TPT.
 		\end{itemize}
-		\item \textbf{Intégration DTIS/SEAS}
 	\end{itemize}
 \end{frame}
 
